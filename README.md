@@ -77,9 +77,13 @@ Add an authorisation implementation for the JWT token that validates the token b
 Protected routes are create a blog, edit a blog, get the list of blogs, delete a blog(s)
 Set the token, once validated, in the request - x-api-key
 Use a middleware for authentication purpose.
+
+
 Authorisation
 Make sure that only the owner of the blogs is able to edit or delete the blog.
 In case of unauthorized access return an appropirate error message.
+
+
 Testing
 To test these apis create a new collection in Postman named Project 1 Blogging
 Each api should have a new request in this collection
