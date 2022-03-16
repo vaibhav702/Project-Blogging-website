@@ -14,27 +14,27 @@ const createAuthor=async function (req,res){
       let emailCheck = await authorModel.findOne({ email })
 
       if (emailCheck) {
-          return res.status(400).send({ status: false, message: `${email} email address is already registered`, });
+          return res.status(400).send({ status: false, msgsage: `${email} email address is already registered`, });
       }
 
       if (!email) {
-          return res.status(400).send({ status: false, message: "please enter email" });
+          return res.status(400).send({ status: false, msgsage: "please enter email" });
       }
 
       if (!password) {
-          return res.status(400).send({ status: false, message: "please enter password" });
+          return res.status(400).send({ status: false, msgsage: "please enter password" });
       }
 
       if (!fname) {
-          return res.status(400).send({ status: false, message: "please enter First name" });
+          return res.status(400).send({ status: false, msgsage: "please enter First name" });
       }
 
       if (!lname) {
-          return res.status(400).send({ status: false, message: "please enter Last name" });
+          return res.status(400).send({ status: false, msgsage: "please enter Last name" });
       }
 
       if (title != 'Miss' || title != 'Mr' || title != 'Mrs') {
-          return res.status(400).send({ status: false, message: "please enter the valid title" });
+          return res.status(400).send({ status: false, msgsage: "please enter the valid title" });
       }
 
       const regex = /^([a-zA-Z0-9\.-]+)@([a-zA-Z0-9-]+).([a-z]+)$/;    //using regex we will verify the email is valid or not
@@ -50,20 +50,20 @@ const createAuthor=async function (req,res){
 
 
     } catch (error) {
-        res.status(500).send({status:false,message:error.message})
+        res.status(500).send({status:false,msgsage:error.msgsage})
         
     }
 }
 module.exports.createAuthor=createAuthor
 const loginUser = async function (req, res) {
-    let userName = req.body.emailId;
+    let userName = req.body.email;
     let password = req.body.password;
     if(!userName){
-      res.status(400).send({status:false,mes:"please enter email"})
+      res.status(400).send({status:false,msg:"please enter email"})
     }
 
     if(!password){
-      res.status(400).send({status:false,mes:"please enter password"})
+      res.status(400).send({status:false,msg:"please enter password"})
     }
   
     let user = await authorModel.findOne({ emailId: userName, password: password });

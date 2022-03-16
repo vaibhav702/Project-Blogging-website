@@ -17,3 +17,14 @@ const headerValidation = function (req, res, next) {
 };
 
 module.exports.headerValidation = headerValidation;
+
+
+
+
+const decodedauthorId = function (req, res, next) {
+  let token = req.headers["x-auth-token"];
+  let decodedToken = jwt.verify(token, "functionup");
+  return decodedToken.authorId ;
+  next();
+  };
+  module.exports.decodedauthorId = decodedauthorId;
