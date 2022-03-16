@@ -14,7 +14,7 @@ router.post("/createAuthor", authorController.createAuthor);
 // create an Blog Api
 
 router.post("/createBlog",middleWare.headerValidation, blogController.createBlog);
-router.get("/getBlogByParams",middleWare.headerValidation,blogController.getBlog)
+router.get("/getBlogs",middleWare.headerValidation,blogController.getBlog)
 
 router.put("/updateBlog/:blogId",middleWare.headerValidation,blogController.updatedBlog)
 router.put("/deleteBlog/:blogId",middleWare.headerValidation,blogController.deletedBlog)

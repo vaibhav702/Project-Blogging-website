@@ -9,7 +9,7 @@ const headerValidation = function (req, res, next) {
 
   let decodedToken = jwt.verify(token, "functionup");
   console.log(decodedToken);
-  if (decodedToken.authorId == req.query.authorId) {
+  if (decodedToken.authorId == req.body.authorId) {   //changes done querey to body for creating blog
     next();
   } else {
     return res.send({ status: false, msg: "token is invalid" });

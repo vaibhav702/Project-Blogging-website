@@ -2,6 +2,7 @@ const authorModel = require("../models/authorModel");
 const blogModel = require("../models/blogModel");
 const router = require("../routes/route");
 const token = require("../middleware/middleware");
+const jwt = require("jsonwebtoken");
 //-------------------------------------------------------------------//
 // create Blog
 const createBlog = async function (req, res) {
@@ -55,25 +56,28 @@ module.exports.createBlog = createBlog;
 // List of blogs that have a specific subcategory example of a query url: blogs?filtername=filtervalue&f2=fv2
 const getBlog = async function (req, res) {
   try {
-    let input = req.query;
-    console.log(input);
-    let filters = Object.entries(input);
+    let request = req.query;
+    console.log(request);
+    let filters = Object.entries(request);
     console.log(filters);
-    let filtersAsObject = [];
+    let finalFilter = [];
 
     for (let i = 0; i < filters.length; i++) {
       let element = filters[i];
       let obj = {};
       obj[element[0]] = element[1];
-      filtersAsObject.push(obj);
+      finalFilter.push(obj);
     }
-    console.log(filtersAsObject);
-    let condition = [{ isDeleted: false }, { isPublished: true }];
-    let finalFilters = condition.concat(filtersAsObject);
-    console.log(finalFilters);
-    if (input) {
-      let blog = await blogModel.find({ $and: finalFilters });
-      if (blog.lengteh == 0) {
+
+    if (request) {
+      let blog = await blogModel.find({
+        $and: [
+          { isDeleted: false },
+          { isPublished: true },
+          { $or: finalFilter },
+        ],
+      });
+      if (blog.length == 0) {
         return res.status(400).send({ status: false, msg: "no blog found" });
       } else {
         res.status(200).send({ status: true, data: blog });
@@ -116,25 +120,25 @@ const updatedBlog = async function (req, res) {
       });
     }
 
-    if (!tags) {
+    if (!updatetags) {
       return res.status(400).send({
         status: false,
         msg: "tags is required for updation",
       });
     }
-    if (!subcategory) {
+    if (!updatesubCategory) {
       return res.status(400).send({
         status: false,
         msg: "subcategory is required for updation",
       });
     }
-    if (!title) {
+    if (!updateTitle) {
       return res.status(400).send({
         status: false,
         msg: "title is required for updation",
       });
     }
-    if (!body) {
+    if (!updateBody) {
       return res.status(400).send({
         status: false,
         msg: "body is required for updation",
@@ -155,7 +159,7 @@ const updatedBlog = async function (req, res) {
     let token = req.headers["x-auth-token"];
     let decodedToken = jwt.verify(token, "functionup");
 
-    if (blog[0].authorId.valueOf() == decodedToken.authorId) {
+    if (blog.authorId.valueOf() == decodedToken.authorId) {
       let updatedContent = await blogModel.findOneAndUpdate(
         {
           _id: blogId,
@@ -218,7 +222,7 @@ const deletedBlog = async function (req, res) {
     let token = req.headers["x-auth-token"];
     let decodedToken = jwt.verify(token, "functionup");
 
-    if (data[0].authorId.valueOf() == decodedToken.authorId) {
+    if (data.authorId.valueOf() == decodedToken.authorId) {
       if (data.isDeleted == false) {
         let deleted = await blogModel.findOneAndUpdate(
           {
@@ -259,67 +263,25 @@ module.exports.deletedBlog = deletedBlog;
 // If the blog document doesn't exist then return an HTTP status of 404 with a body like this
 const deletedBlogByParams = async (req, res) => {
   try {
-    const filter = {
-      isDeleted: false,
-    };
+    let query = req.query;
+    let filters = Object.entries(query);
 
-    const authorId = req.query.authorId; //use for find
-    const category = req.query.category;
-    var isPublished = req.query.isPublished;
-    if (isPublished == "false") var isPublished = false;
-    if (isPublished == "true") var isPublished = true;
-    const tags = req.query.tags;
-    const subcategory = req.query.subcategory;
+    let finalFilter = [];
 
-    if (!authorId) {
-      res.status(400).send({
-        status: false,
-        mes: " please enter autherid",
-      });
-    }
-    if (!category) {
-      res.status(400).send({
-        status: false,
-        mes: " please enter category",
-      });
-    }
-    if (!isPublished) {
-      res.status(400).send({
-        status: false,
-        mes: " please enter published",
-      });
-    }
-    if (!tags) {
-      res.status(400).send({
-        status: false,
-        mes: " please enter tags",
-      });
-    }
-    if (!subcategory) {
-      res.status(400).send({
-        status: false,
-        mes: " please enter subcategory",
-      });
+    for (let i = 0; i < filters.length; i++) {
+      let element = filters[i];
+      let obj = {};
+      obj[element[0]] = element[1];
+      finalFilter.push(obj);
     }
 
-    filter["authorId"] = authorId; // we will add key and value in filter
-    filter["category"] = category;
-    filter["isPublished"] = isPublished;
-
-    var tag = tags.split(" ").map((tag) => tag.trim());
-    var newTag = tag.filter((e) => e); //it will remove the empty string
-    filter["tags"] = {
-      $all: newTag,
-    };
-
-    var sub = subcategory.split(" ").map((subcat) => subcat.trim()); //space remove before the string after the string
-
-    var subcat = sub.filter((e) => e);
-    filter["subcategory"] = {
-      $all: subcat,
-    };
-
-    const findBlogs = await blogModel.find(filter);
+    const findBlogs = await blogModel.find({
+      $and: [
+        { isDeleted: false },
+        { isPublished: false },
+        { $and: finalFilter },
+      ],
+    });
     if (findBlogs.length === 0) {
       res.status(404).send({
         status: false,
