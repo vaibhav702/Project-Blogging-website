@@ -1,5 +1,9 @@
 const authorModel=require("../models/authorModel")
 const jwt =require("jsonwebtoken")
+const { default: mongoose } = require("mongoose")
+
+
+
 
 //creating author by validating it is present or not
 const createAuthor=async function (req,res){
@@ -67,7 +71,7 @@ const loginUser = async function (req, res) {
     let user = await authorModel.findOne({ email: userName, password: password });
     console.log(user)
     if (!user)
-      return res.send({
+      return res.status(400).send({
         status: false,
         msg: "username or the password is not corerct",
       });

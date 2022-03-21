@@ -3,7 +3,20 @@ const blogModel = require("../models/blogModel");
 const router = require("../routes/route");
 const token = require("../middleware/middleware");
 const jwt = require("jsonwebtoken");
-//-------------------------------------------------------------------//
+//=//
+const isValid =function(value){
+  if(typeof value === 'undefined' || value === null) return false
+  if(typeof value === 'string' || value.trim().length>0 ) return false
+  return true;
+  
+
+}
+const isValidRequestBody =function(requestBody){
+  return Object.keys(requestBody).length>0
+}
+const isValidObjectId =function(objectId){
+return mongoose.Types.ObjectId.isValid(objectId)
+}
 // create Blog
 const createBlog = async function (req, res) {
   try {
@@ -48,61 +61,59 @@ const createBlog = async function (req, res) {
 };
 module.exports.createBlog = createBlog;
 
-//--------------------------------------------------------------------//
-//get Blog
-//By author Id
-// By category
-// List of blogs that have a specific tag
-// List of blogs that have a specific subcategory example of a query url: blogs?filtername=filtervalue&f2=fv2
+// get blog
 const getBlog = async function (req, res) {
   try {
-    let request = req.query;
-    console.log(request);
-    let filters = Object.entries(request);
-    console.log(filters);
-    let finalFilter = [];
+    const filterQuery = {
+      isDeleted: false,
+      deleteAt: null,
+      isPublished: true,
+    };
+    const queryParams = req.query;
 
-    for (let i = 0; i < filters.length; i++) {
-      let element = filters[i];
-      let obj = {};
-      obj[element[0]] = element[1];
-      finalFilter.push(obj);
+    if (isValidRequestBody(queryParams)) {
+      const { authorId, category, tags, subcategory } = queryParams;
+
+      if (isValid(authorId) && isValidObjectId(authorId)) {
+        filterQuery["authorId"] - authorId;
+      }
+
+      if (isValid(category)) {
+        filterQuery["category"] = category.trim();
+      }
+
+      if (isValid(tags)) {
+        const tagsArr = tags
+          .trim()
+          .split(",")
+          .map((tag) => tag.trim());
+
+        filterQuery["tags"] = { $all: tagsArr };
+      }
+
+      if (isValid(subcategory)) {
+        const subcatArr = subcategory
+          .trim()
+          .split(",")
+          .map((subcat) => subcat.trim());
+        filterQuery["subcategory"] = { $all: subcatArr };
+      }
     }
 
-    if (request) {
-      let blog = await blogModel.find({
-        $and: [
-          { isDeleted: false },
-          { isPublished: true },
-          { $or: finalFilter },
-        ],
-      });
-      if (blog.length == 0) {
-        return res.status(400).send({ status: false, msg: "no blog found" });
-      } else {
-        res.status(200).send({ status: true, data: blog });
-      }
-    } else {
-      let blog = await blogModel.find({ $and: condition });
-      if (blog.length == 0) {
-        return res
-          .status(404)
-          .send({ status: false, msg: "no such blog found" });
-      } else {
-        res.status(500).send({ status: true, data: blog });
-      }
+    const blogs = await blogModel.find(filterQuery);
+
+    if (Array.isArray(blogs) && blogs.length === 0) {
+      res.status(404).send({ status: false, message: "No blogs found" });
+      return;
     }
+
+    res.status(200).send({ status: true, message: "Blogs list", data: blogs });
   } catch (error) {
-    res.status(500).send({
-      status: false,
-      message: error.message,
-    });
+    res.status(500).send({ status: false, message: error.message });
   }
 };
-
 module.exports.getBlog = getBlog;
-
-//---------------------------------------------------------------------------------------------//
+//=//
 //updated blog
 const updatedBlog = async function (req, res) {
   try {
@@ -147,6 +158,7 @@ const updatedBlog = async function (req, res) {
 
     let blog = await blogModel.findOne({
       _id: blogId,
+     
     });
 
     if (!blog) {
@@ -156,7 +168,7 @@ const updatedBlog = async function (req, res) {
       });
     }
 
-    let token = req.headers["x-auth-token"];
+    let token = req.headers["x=auth=token"];
     let decodedToken = jwt.verify(token, "functionup");
 
     if (blog.authorId.valueOf() == decodedToken.authorId) {
@@ -197,7 +209,7 @@ const updatedBlog = async function (req, res) {
 };
 module.exports.updatedBlog = updatedBlog;
 
-//---------------------------------------------------------------------------//
+//=//
 //delete blog element
 //Check if the blogId exists( and is not deleted). If it does, mark it deleted and return an HTTP status 200 without any response body.
 //If the blog document doesn't exist then return an HTTP status of 404 with a body like this
@@ -219,7 +231,7 @@ const deletedBlog = async function (req, res) {
         msg: "document does not exist",
       });
     }
-    let token = req.headers["x-auth-token"];
+    let token = req.headers["x=auth=token"];
     let decodedToken = jwt.verify(token, "functionup");
 
     if (data.authorId.valueOf() == decodedToken.authorId) {
@@ -256,7 +268,7 @@ const deletedBlog = async function (req, res) {
 };
 module.exports.deletedBlog = deletedBlog;
 
-//------------------------------------------------------------------------------------------------------------------------//
+//=//
 //delete block by params
 // DELETE /blogs?queryParams
 // Delete blog documents by category, authorid, tag name, subcategory name, unpublished
@@ -278,7 +290,7 @@ const deletedBlogByParams = async (req, res) => {
     const findBlogs = await blogModel.find({
       $and: [
         { isDeleted: false },
-        { isPublished: false },
+        { isPublished: true },
         { $and: finalFilter },
       ],
     });
@@ -291,7 +303,7 @@ const deletedBlogByParams = async (req, res) => {
     }
     console.log(findBlogs);
 
-    let token = req.headers["x-auth-token"];
+    let token = req.headers["x=auth=token"];
     let decodedToken = jwt.verify(token, "functionup");
 
     if (findBlogs[0].authorId.valueOf() == decodedToken.authorId) {

@@ -17,8 +17,8 @@ router.post("/createBlog",middleWare.headerValidation, blogController.createBlog
 router.get("/getBlogs",middleWare.headerValidation,blogController.getBlog)
 
 router.put("/updateBlog/:blogId",middleWare.headerValidation,blogController.updatedBlog)
-router.put("/deleteBlog/:blogId",middleWare.headerValidation,blogController.deletedBlog)
-router.put("/deleteBlog",middleWare.headerValidation,blogController.deletedBlogByParams)
+router.delete("/deleteBlog/:blogId",middleWare.headerValidation,blogController.deletedBlog)
+router.delete("/deleteBlog",middleWare.headerValidation,blogController.deletedBlogByParams)
 
 router.post("/login",authorController.loginUser)
 module.exports = router;
